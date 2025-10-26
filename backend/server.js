@@ -1,23 +1,25 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config");
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
+// CORS middleware to parse JSON
 app.use(cors());
 app.use(express.json());
 
-connectDB();
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// WRITE BELOW ONLY!!
 
-app.get("/", (req, res) => {
-  res.send("Backend is running!");
-});
 
+
+// WRITE ABOVE ONLY!!
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// start the Express server
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
