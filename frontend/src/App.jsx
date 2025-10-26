@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <Router>
-        <div className='h-4 w-full absolute bottom-0 -translate-y-4 flex gap-4 p-4'>
+        <div className='h-4 w-full absolute bottom-0 -translate-y-4 flex gap-4 p-4 text-[#FFFFFF]'>
           <a className='cursor-pointer hover:underline'
           href="/">
             Start
