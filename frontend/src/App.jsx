@@ -10,7 +10,7 @@ function App() {
 
   return (
     <>
-      <div className='h-4 w-full absolute bottom-0 -translate-y-4 flex gap-4 p-4'>
+      <div className='h-4 w-full absolute bottom-0 -translate-y-4 flex gap-4 p-4 text-[#FFFFFF]'>
         <div className='cursor-pointer hover:underline'
         onClick={() => navigate("/")}>
           Start
