@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 
 const Game = () => {
   const [currentTime, setCurrentTime] = useState(0);
-  const [hitObjects, setHitObjects] = useState([]); // this and songinfo should be parsed into a file later on
+  const [hitObjects, setHitObjects] = useState([]); // this and below should be parsed into a file later on
   const [songInfo, setSongInfo] = useState([]);
+  const [userData, setUserData] = useState({}); // query from local storage first otherwise set defults
   const musicTime = useRef(0);
   const mapPath = './beatmapsRaw/200552/'; // turn reading files into its own component later
 
@@ -17,6 +18,12 @@ const Game = () => {
     };
 
     loadHitObjects();
+
+    setUserData({
+      Keybinds: {'4k': ['D', 'F', 'J', 'K']},
+      ManiaWidth: {'4k': '120'},
+      ManiaHeight: {'4k': '30'}
+    });
   }, []);
 
   const getHitObjects = (fileString) => {
@@ -139,8 +146,56 @@ const Game = () => {
   };
 
   const getColumn = (xValue) => {
-    return Math.floor(x * songInfo['CircleSize'] / 512) // clamped between 0 and columnCount - 1
+    return Math.floor(xValue * songInfo['CircleSize'] / 512) // clamped between 0 and columnCount - 1
   }
+
+
+  const HitObjectRenderer = ({ hitObjects, currentTime }) => {
+    const visibleHitObjects = hitObjects.filter(obj => {
+      const timeUntilHit = obj.time - currentTime;
+      return timeUntilHit > -100 && timeUntilHit < 1500;
+    });
+
+    return (
+      <div style={{ 
+        position: 'relative', 
+        width: `${4 * 120}px`
+      }}>
+        {visibleHitObjects.map((obj, index) => {
+          const timeUntilHit = obj.time - currentTime;
+          const column = getColumn(obj.x);
+          const yPosition = Math.max(0, 1080 - (timeUntilHit / 400) * 300);
+          
+          return (
+            <div
+              key={index}
+              style={{
+                position: 'absolute',
+                left: `${column * userData['ManiaWidth'][songInfo['CircleSize'] + 'k']}px`,
+                top: `${yPosition}px`,
+                width: `${userData['ManiaWidth'][songInfo['CircleSize'] + 'k'] - 2}px`,
+                height: `${userData['ManiaHeight'][songInfo['CircleSize'] + 'k'] - 2}px`,
+                backgroundColor: '#FFFFFF',
+                border: '1px solid white',
+                borderRadius: '3px',
+                opacity: timeUntilHit < 0 ? 0.5 : 1,
+                transition: 'opacity 0.1s',
+              }}
+            />
+          );
+        })}
+        
+        <div style={{
+          position: 'absolute',
+          left: '0',
+          bottom: '10px', // adjust to the hit
+          width: '100%',
+          height: '2px',
+          backgroundColor: '#FFFFFF',
+        }} />
+      </div>
+    );
+  };
 
   return (
     <>
@@ -158,8 +213,11 @@ const Game = () => {
         Current Time: {currentTime}ms
       </div>
 
-      <div className='absolute w-0.5 h-full'>
-
+      <div className='w-full h-full absolute overflow-hidden flex justify-center top-0 left-0 pointer-events-none'>
+        <HitObjectRenderer
+          hitObjects={hitObjects}
+          currentTime={currentTime}
+        />
       </div>
 
 
