@@ -44,12 +44,14 @@ const Game = () => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       setPressedKeys(prev => new Set(prev).add(event.key));
+      console.log(`Key DOWN: ${event.key} at ${musicTime.current ? musicTime.current.currentTime * 1000 : 0}ms`);
     };
 
     const handleKeyUp = (event) => {
       setPressedKeys(prev => {
         const newKeys = new Set(prev);
         newKeys.delete(event.key);
+        console.log(`Key UP: ${event.key} at ${musicTime.current ? musicTime.current.currentTime * 1000 : 0}ms`);
         return newKeys;
       });
     };
