@@ -5,7 +5,9 @@ const Game = () => {
   const [hitObjects, setHitObjects] = useState([]); // this and below should be parsed into a file later on
   const [songInfo, setSongInfo] = useState([]);
   const [userData, setUserData] = useState({}); // query from local storage first otherwise set defults
+  const [pressedKeys, setPressedKeys] = useState(new Set());
   const musicTime = useRef(0);
+  const animationRef = useRef();
   const mapPath = './beatmapsRaw/200552/'; // turn reading files into its own component later
 
   useEffect(() => {
@@ -20,10 +22,45 @@ const Game = () => {
     loadHitObjects();
 
     setUserData({
-      Keybinds: {'4k': ['D', 'F', 'J', 'K']},
-      ManiaWidth: {'4k': '120'},
-      ManiaHeight: {'4k': '30'}
+      Keybinds: {'4': ['d', 'f', 'j', 'k']},
+      ManiaWidth: {'4': '120'},
+      ManiaHeight: {'4': '30'}
     });
+
+    const animate = () => {
+      setCurrentTime(musicTime.current ? musicTime.current.currentTime * 1000 : 0);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      setPressedKeys(prev => new Set(prev).add(event.key));
+    };
+
+    const handleKeyUp = (event) => {
+      setPressedKeys(prev => {
+        const newKeys = new Set(prev);
+        newKeys.delete(event.key);
+        return newKeys;
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
   const getHitObjects = (fileString) => {
@@ -153,7 +190,7 @@ const Game = () => {
   const HitObjectRenderer = ({ hitObjects, currentTime }) => {
     const visibleHitObjects = hitObjects.filter(obj => {
       const timeUntilHit = obj.time - currentTime;
-      return timeUntilHit > -100 && timeUntilHit < 1500;
+      return timeUntilHit > -100 && timeUntilHit < 600;
     });
 
     return (
@@ -164,22 +201,24 @@ const Game = () => {
         {visibleHitObjects.map((obj, index) => {
           const timeUntilHit = obj.time - currentTime;
           const column = getColumn(obj.x);
-          const yPosition = Math.max(0, 1080 - (timeUntilHit / 400) * 300);
+          const approachTime = 500;
+          const progress = 1 - (timeUntilHit / approachTime);
+          const yPosition = Math.max(0, Math.min(1, progress)) * 800;
           
           return (
             <div
               key={index}
               style={{
                 position: 'absolute',
-                left: `${column * userData['ManiaWidth'][songInfo['CircleSize'] + 'k']}px`,
+                left: `${column * userData['ManiaWidth'][songInfo['CircleSize']]}px`,
                 top: `${yPosition}px`,
-                width: `${userData['ManiaWidth'][songInfo['CircleSize'] + 'k'] - 2}px`,
-                height: `${userData['ManiaHeight'][songInfo['CircleSize'] + 'k'] - 2}px`,
+                width: `${userData['ManiaWidth'][songInfo['CircleSize']] - 2}px`,
+                height: `${userData['ManiaHeight'][songInfo['CircleSize']] - 2}px`,
                 backgroundColor: '#FFFFFF',
                 border: '1px solid white',
                 borderRadius: '3px',
                 opacity: timeUntilHit < 0 ? 0.5 : 1,
-                transition: 'opacity 0.1s',
+                transition: timeUntilHit < 0 ? 'none' : 'all 16ms linear',
               }}
             />
           );
@@ -188,7 +227,7 @@ const Game = () => {
         <div style={{
           position: 'absolute',
           left: '0',
-          bottom: '10px', // adjust to the hit
+          bottom: '115px', // adjust to the hit
           width: '100%',
           height: '2px',
           backgroundColor: '#FFFFFF',
@@ -211,6 +250,11 @@ const Game = () => {
 
       <div>
         Current Time: {currentTime}ms
+      </div>
+
+      <div>
+        <p>Currently pressed keys: {Array.from(pressedKeys).join(', ') || 'None'}</p>
+        <p>Number of keys pressed: {pressedKeys.size}</p>
       </div>
 
       <div className='w-full h-full absolute overflow-hidden flex justify-center top-0 left-0 pointer-events-none'>
